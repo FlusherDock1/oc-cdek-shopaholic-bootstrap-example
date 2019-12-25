@@ -1,0 +1,37 @@
+{% set obShippingTypeList = obShippingTypeList ? obShippingTypeList : ShippingTypeList.make().sort().active() %}
+{% set shippingTypeId = input('shipping_type_id') %}
+{% set cityId = input('city_data.id') %}
+{% set cityData = CdekShipping.getCityData() %}
+{% set pvzOffices = cityId ? CdekShipping.getPvzOffices() : null %}
+{% for obShippingType in obShippingTypeList %}
+<div class="form-check">
+    {% set isCDEK = obShippingType.api_class == 'Gabix\\CdekShopaholic\\Classes\\CdekApiShipping' %}
+    {% set apiData = isCDEK and cityId ? obShippingType.api.getData() : null %}
+    {% set isChecked = shippingTypeId ? shippingTypeId == obShippingType.id : loop.first %}
+    {% set addClass = isCDEK and obShippingType.property.show_pvz ? '_js_cdek_type _js_cdek_pvz' : '_js_cdek_type' %}
+    {% set isDisabled = isCDEK and (not cityId or not apiData.price
+            or (obShippingType.properties.show_pvz and not pvzOffices) ) %}
+    <input class="form-check-input {{ isCDEK ? addClass : '' }}" type="radio" name="shipping_type_id"
+           id="sipping-type-{{ obShippingType.id }}" data-tariff_id="{{ apiData ? apiData.tariffId : '' }}"
+           value="{{ obShippingType.id }}" {{ isDisabled ? 'disabled' : '' }}
+           {{ isChecked ? 'checked' : '' }} required >
+    <label class="form-check-label" for="sipping-type-{{ obShippingType.id }}">
+        {{ obShippingType.name }}
+        {% if not isCDEK %}
+        - {{ obShippingType.price }} {{ obShippingType.currency }}
+        {% elseif isCDEK and cityId and isDisabled %}
+        - <span class="text-danger">not available</span>
+        {% elseif isCDEK and cityId %}
+        - {{ obShippingType.price }} {{ obShippingType.currency }}
+            {% if apiData.deliveryPeriodMin or apiData.deliveryPeriodMax  %}
+                {% set daysInterval = apiData.deliveryPeriodMin ~ (apiData.deliveryPeriodMax and apiData.deliveryPeriodMax != apiData.deliveryPeriodMin
+                ? (apiData.deliveryPeriodMin ? '-' : '') ~ apiData.deliveryPeriodMax : '') %}
+                <small>({{ daysInterval }} {{ "gabix.cdekshopaholic::lang.count.days"|transchoice(apiData.deliveryPeriodMax) }})</small>
+            {% endif %}
+        {% endif %}
+    </label>
+</div>
+{% endfor %}
+{% for param, val in cityData %}
+<input type="hidden" name="order[property][city_data][{{ param }}]" value="{{ val }}">
+{% endfor %}

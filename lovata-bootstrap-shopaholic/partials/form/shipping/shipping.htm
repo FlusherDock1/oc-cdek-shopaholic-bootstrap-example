@@ -1,0 +1,74 @@
+<div class="_js_address_block">
+    <div class="form-group">
+        <label for="inputAddress">Street</label>
+        <input type="text" class="form-control" id="inputAddress" name="order[property][shipping_street]" placeholder="1234 Main St">
+        <div class="invalid-feedback">
+            Please add your address street
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-6 mb-3">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">House</div>
+                </div>
+                <input type="text" class="form-control" name="order[property][shipping_house]" placeholder="123">
+                <div class="invalid-feedback">
+                    Please add your address house number
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 mb-3">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">Flat</div>
+                </div>
+                <input type="text" class="form-control" name="order[property][shipping_flat]" placeholder="11, office 22">
+            </div>
+        </div>
+    </div>
+</div>
+<hr>
+{% set obShippingTypeList = ShippingTypeList.make().sort().active() %}
+{% if obShippingTypeList.isNotEmpty() %}
+{% set cityData = CdekShipping.getCityData() %}
+<fieldset class="form-group _js_cdek_city_group">
+    <label for="cdek-city">Destination city</label>
+    <select name="order[property][city_id]" class="form-control _js_cdek_city_select" id="cdek-city" data-placeholder="Start typing in city name...">
+        {% if cityData and cityData.id %}
+        <option selected value="{{ cityData.id }}" data-data="{{ cityData|json_encode }}">
+            {{ cityData.name }}
+        </option>
+        {% endif %}
+    </select>
+    <div class="invalid-feedback">
+        Please select city
+    </div>
+    <input type="hidden" class="_js_cdek_req" name="order[property][shipping_tariff_id]">
+</fieldset>
+<fieldset class="form-group _js_cdek_pvz_group" style="display:none">
+    <label for="cdek-pvz">Pickup point</label>
+    <div class="input-group">
+        <div class="input-group-prepend">
+            <a href="#" data-toggle="modal" class="input-group-text" data-target="._js_cdek_modal"><i class="fa fa-map-marker"></i>&nbsp;Show map</a>
+        </div>
+        <select name="order[property][pvz_code]" class="form-control" id="cdek-pvz" data-placeholder="Select pickup point..."></select>
+        <div class="invalid-feedback">
+            Please select pickup point
+        </div>
+    </div>
+</fieldset>
+<hr>
+<fieldset class="form-group">
+    <div class="row">
+        <div class="col-12 _js_shipping_types">
+            {% partial 'form/shipping/shipping-types' obShippingTypeList=obShippingTypeList %}
+        </div>
+    </div>
+</fieldset>
+<hr>
+{% partial 'form/shipping/modal-map' %}
+{% put scripts %}
+<script src="//api-maps.yandex.ru/2.1/?lang=ru_RU"></script>
+{% endput %}
+{% endif %}
